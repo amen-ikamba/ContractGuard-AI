@@ -1,5 +1,4 @@
-### `src/agent/prompts.py`
-```python
+
 """
 System prompts and prompt templates for the agent
 """
