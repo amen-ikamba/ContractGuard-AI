@@ -1,0 +1,31 @@
+{
+  "clauses": [
+    {
+      "id": "ip_customer_retains",
+      "text": "Customer retains all rights, title, and interest in and to Customer Data and any pre-existing Customer intellectual property. Provider retains all rights to the Service and Provider's pre-existing intellectual property.",
+      "industry": "SaaS",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["ip", "ownership", "customer_data"],
+      "acceptance_rate": 94
+    },
+    {
+      "id": "ip_work_product_customer",
+      "text": "All work product, deliverables, and intellectual property created specifically for Customer under this Agreement shall be owned exclusively by Customer upon full payment of all fees.",
+      "industry": "Consulting",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["ip", "work_product", "ownership"],
+      "acceptance_rate": 82
+    },
+    {
+      "id": "ip_license_to_provider",
+      "text": "Customer grants Provider a limited, non-exclusive, royalty-free license to use Customer Data solely for the purpose of providing the Service during the Term.",
+      "industry": "SaaS",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["ip", "license", "customer_data"],
+      "acceptance_rate": 88
+    }
+  ]
+}

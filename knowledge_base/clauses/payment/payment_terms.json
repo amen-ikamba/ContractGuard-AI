@@ -1,0 +1,31 @@
+{
+  "clauses": [
+    {
+      "id": "payment_net30",
+      "text": "Customer shall pay all undisputed invoices within 30 days of receipt. Payment shall be made via wire transfer or credit card to the account specified by Provider.",
+      "industry": "General",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["payment", "terms", "net30"],
+      "acceptance_rate": 91
+    },
+    {
+      "id": "payment_late_fees",
+      "text": "Late payments shall accrue interest at the rate of 1.5% per month (or the maximum rate permitted by law, whichever is lower) from the due date until paid in full.",
+      "industry": "General",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["payment", "late_fees", "interest"],
+      "acceptance_rate": 76
+    },
+    {
+      "id": "payment_annual_prepaid",
+      "text": "Annual subscription fees shall be paid in advance at the start of each subscription year. Monthly plans shall be billed in advance on the same day each month.",
+      "industry": "SaaS",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["payment", "subscription", "prepaid"],
+      "acceptance_rate": 85
+    }
+  ]
+}

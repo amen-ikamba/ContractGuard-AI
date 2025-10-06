@@ -1,0 +1,31 @@
+{
+  "clauses": [
+    {
+      "id": "termination_convenience_30d",
+      "text": "Either party may terminate this Agreement for convenience with 30 days prior written notice to the other party.",
+      "industry": "General",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["termination", "convenience", "30_days"],
+      "acceptance_rate": 87
+    },
+    {
+      "id": "termination_breach",
+      "text": "Either party may terminate this Agreement immediately upon written notice if the other party materially breaches this Agreement and fails to cure such breach within 30 days of receiving written notice thereof.",
+      "industry": "General",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["termination", "breach", "cure_period"],
+      "acceptance_rate": 92
+    },
+    {
+      "id": "termination_refund_prorata",
+      "text": "Upon termination by Customer for Provider's material breach, Provider shall refund any prepaid fees for the unused portion of the subscription term on a pro-rata basis.",
+      "industry": "SaaS",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["termination", "refund", "prorata"],
+      "acceptance_rate": 79
+    }
+  ]
+}

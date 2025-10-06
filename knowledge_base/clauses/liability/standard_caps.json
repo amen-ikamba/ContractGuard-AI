@@ -1,0 +1,41 @@
+{
+  "clauses": [
+    {
+      "id": "liability_cap_12m",
+      "text": "Provider's total liability under this Agreement shall not exceed the total fees paid by Customer in the 12 months preceding the claim.",
+      "industry": "SaaS",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["liability", "cap", "standard"],
+      "acceptance_rate": 89,
+      "notes": "Most common liability cap in SaaS agreements"
+    },
+    {
+      "id": "liability_mutual_cap",
+      "text": "Each party's total liability under this Agreement shall be limited to the greater of (a) the total fees paid or payable in the 12 months preceding the claim or (b) $100,000.",
+      "industry": "General",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["liability", "cap", "mutual"],
+      "acceptance_rate": 85
+    },
+    {
+      "id": "liability_no_indirect",
+      "text": "In no event shall either party be liable for indirect, incidental, special, consequential, or punitive damages, including lost profits, loss of data, or loss of business opportunity.",
+      "industry": "General",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["liability", "exclusions", "indirect"],
+      "acceptance_rate": 92
+    },
+    {
+      "id": "liability_exceptions",
+      "text": "The liability limitations in this Agreement shall not apply to: (a) death or personal injury caused by negligence; (b) fraud or fraudulent misrepresentation; (c) gross negligence or willful misconduct; or (d) breach of confidentiality obligations.",
+      "industry": "General",
+      "risk_level": "LOW",
+      "source": "industry_standard",
+      "tags": ["liability", "exceptions", "carveouts"],
+      "acceptance_rate": 78
+    }
+  ]
+}
