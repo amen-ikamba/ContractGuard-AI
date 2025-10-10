@@ -249,27 +249,82 @@ Work through this autonomously and provide your recommendation."""
         """
         Parse and structure the agent's response.
         """
-        # Extract structured data from agent response
-    # The agent should return JSON-formatted results
-    try:
-        # Try to extract JSON from markdown code blocks
         import re
-        json_match = re.search(r'```json\n(.*?)\n```', completion_text, re.DOTALL)
-        if json_match:
-            structured_data = json.loads(json_match.group(1))
-        else:
-            # Try to parse entire response as JSON
-            structured_data = json.loads(completion_text)
-    except json.JSONDecodeError:
-        # If not JSON, create structure from text
-        structured_data = {
-            'raw_response': completion_text,
-            'parsed': False,
-        }
-    
-    # Add trace information for debugging
-    structured_data['agent_traces'] = self._extract_tool_calls(traces)
-    structured_data['session_id'] = response.get('session_id')
-    structured_data['timestamp'] = datetime.utcnow().isoformat()
-    
-    return structured_data
+
+        completion_text = response.get('completion', '')
+        traces = response.get('traces', [])
+
+        # Extract structured data from agent response
+        # The agent should return JSON-formatted results
+        try:
+            # Try to extract JSON from markdown code blocks
+            json_match = re.search(r'```json\n(.*?)\n```', completion_text, re.DOTALL)
+            if json_match:
+                structured_data = json.loads(json_match.group(1))
+            else:
+                # Try to parse entire response as JSON
+                structured_data = json.loads(completion_text)
+        except json.JSONDecodeError:
+            # If not JSON, create structure from text
+            structured_data = {
+                'raw_response': completion_text,
+                'parsed': False,
+            }
+
+        # Add trace information for debugging
+        structured_data['agent_traces'] = self._extract_tool_calls(traces)
+        structured_data['session_id'] = response.get('session_id')
+        structured_data['timestamp'] = datetime.utcnow().isoformat()
+
+        return structured_data
+
+    def _extract_tool_calls(self, traces: list) -> list:
+        """
+        Extract tool invocation information from agent traces.
+
+        Args:
+            traces: List of trace events from agent execution
+
+        Returns:
+            list: Structured tool call information
+        """
+        tool_calls = []
+
+        for trace in traces:
+            trace_data = trace.get('trace', {})
+
+            # Extract orchestration trace
+            if 'orchestrationTrace' in trace_data:
+                orch_trace = trace_data['orchestrationTrace']
+
+                # Tool usage
+                if 'invocationInput' in orch_trace:
+                    invocation = orch_trace['invocationInput']
+                    if 'actionGroupInvocationInput' in invocation:
+                        action_input = invocation['actionGroupInvocationInput']
+                        tool_calls.append({
+                            'type': 'action_group',
+                            'action_group': action_input.get('actionGroupName'),
+                            'api_path': action_input.get('apiPath'),
+                            'parameters': action_input.get('parameters', []),
+                            'timestamp': datetime.utcnow().isoformat()
+                        })
+
+                    if 'knowledgeBaseLookupInput' in invocation:
+                        kb_input = invocation['knowledgeBaseLookupInput']
+                        tool_calls.append({
+                            'type': 'knowledge_base',
+                            'query': kb_input.get('text'),
+                            'kb_id': kb_input.get('knowledgeBaseId'),
+                            'timestamp': datetime.utcnow().isoformat()
+                        })
+
+                # Observation (tool results)
+                if 'observation' in orch_trace:
+                    observation = orch_trace['observation']
+                    if 'actionGroupInvocationOutput' in observation:
+                        output = observation['actionGroupInvocationOutput']
+                        if tool_calls:
+                            tool_calls[-1]['result'] = output.get('text')
+
+        return tool_calls

@@ -9,12 +9,12 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 setup(
     name="contractguard-ai",
     version="1.0.0",
-    author="Your Team Name",
+    author="Amen Ikamba",
     author_email="team@contractguard.ai",
     description="Autonomous AI agent for contract review and negotiation",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/contractguard-ai",
+    url="https://github.com/amen-ikamba/contractguard-ai",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
@@ -24,8 +24,13 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Operating System :: OS Independent",
+        "Framework :: FastAPI",
+        "Framework :: AWS CDK",
     ],
-    python_requires=">=3.11",
+    python_requires=">=3.11,<3.14",
     install_requires=requirements,
     entry_points={
         "console_scripts": [
