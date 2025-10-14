@@ -404,3 +404,4 @@ uvicorn src.api.handlers:app --reload
 ---
 
 Made with ❤️ by the ContractGuard Team
+# ContractGuard-AI
