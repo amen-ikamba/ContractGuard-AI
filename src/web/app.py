@@ -665,7 +665,7 @@ def show_settings():
     st.markdown("""
     **Version:** 1.0.0  
     **Built for:** AWS AI Agent Global Hackathon 2025  
-    **GitHub:** [github.com/your-username/contractguard-ai](https://github.com/your-username/contractguard-ai)
+    **GitHub:** [github.com/amen-ikamba/contractguard-ai](https://github.com/amen-ikamba/contractguard-ai)
     
     **Technologies:**
     - Amazon Bedrock (Claude 3.5 Sonnet)

@@ -15,10 +15,11 @@ logger = get_logger(__name__)
 
 class DynamoDBHelper:
     """Helper class for DynamoDB operations"""
-    
+
     def __init__(self):
-        self.dynamodb = boto3.resource('dynamodb')
-        self.client = boto3.client('dynamodb')
+        self.region = os.getenv('AWS_REGION', 'us-east-2')
+        self.dynamodb = boto3.resource('dynamodb', region_name=self.region)
+        self.client = boto3.client('dynamodb', region_name=self.region)
         
         # Table names from environment
         self.contracts_table_name = os.getenv('CONTRACTS_TABLE', 'ContractGuard-Contracts')

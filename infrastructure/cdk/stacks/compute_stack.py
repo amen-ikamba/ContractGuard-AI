@@ -186,11 +186,13 @@ class ComputeStack(Stack):
         )
         
         # ==================== Outputs ====================
-        
+
         for name, func in self.lambda_functions.items():
+            # Convert snake_case to PascalCase for export names
+            export_name = ''.join(word.capitalize() for word in name.split('_'))
             CfnOutput(
                 self,
                 f"{name}Arn",
                 value=func.function_arn,
-                export_name=f"ContractGuard-{name}-Arn"
+                export_name=f"ContractGuard-{export_name}-Arn"
             )

@@ -1,153 +1,167 @@
 """
-AI Stack: Bedrock Agent and Knowledge Base
+API Stack: API Gateway and related resources
 """
 
 from aws_cdk import (
     Stack,
-    aws_bedrock as bedrock,
-    aws_iam as iam,
-    aws_s3 as s3,
+    aws_apigateway as apigw,
+    aws_lambda as lambda_,
     CfnOutput
 )
 from constructs import Construct
 
 
-class AIStack(Stack):
-    """AI resources for ContractGuard"""
-    
+class APIStack(Stack):
+    """API Gateway resources for ContractGuard"""
+
     def __init__(
         self,
         scope: Construct,
         construct_id: str,
-        kb_bucket: s3.IBucket,
+        lambda_functions: dict,
         **kwargs
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
-        
-        # ==================== IAM Roles ====================
-        
-        # Agent execution role
-        agent_role = iam.Role(
-            self, "AgentRole",
-            assumed_by=iam.ServicePrincipal("bedrock.amazonaws.com"),
-            description="Execution role for ContractGuard agent"
-        )
-        
-        # Grant Bedrock permissions
-        agent_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=[
-                    "bedrock:InvokeModel",
-                    "bedrock:InvokeAgent"
-                ],
-                resources=["*"]
-            )
-        )
-        
-        # Grant Lambda invocation permissions (added in compute stack)
-        agent_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=["lambda:InvokeFunction"],
-                resources=["*"]  # Will be scoped in compute stack
-            )
-        )
-        
-        # Knowledge Base execution role
-        kb_role = iam.Role(
-            self, "KBRole",
-            assumed_by=iam.ServicePrincipal("bedrock.amazonaws.com"),
-            description="Execution role for ContractGuard knowledge base"
-        )
-        
-        # Grant S3 read access
-        kb_bucket.grant_read(kb_role)
-        
-        # Grant Bedrock permissions
-        kb_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=[
-                    "bedrock:InvokeModel"
-                ],
-                resources=["*"]
-            )
-        )
-        
-        # ==================== Knowledge Base ====================
-        
-        # Note: As of CDK 2.120.0, Bedrock Knowledge Base is in L1 (CFN) only
-        # Using CfnKnowledgeBase
-        
-        self.knowledge_base = bedrock.CfnKnowledgeBase(
-            self, "ContractGuardKB",
-            name="ContractGuard-ClauseLibrary",
-            role_arn=kb_role.role_arn,
-            knowledge_base_configuration=bedrock.CfnKnowledgeBase.KnowledgeBaseConfigurationProperty(
-                type="VECTOR",
-                vector_knowledge_base_configuration=bedrock.CfnKnowledgeBase.VectorKnowledgeBaseConfigurationProperty(
-                    embedding_model_arn=f"arn:aws:bedrock:{self.region}::foundation-model/amazon.titan-embed-text-v1"
-                )
+
+        # ==================== API Gateway ====================
+
+        # Create REST API
+        self.api = apigw.RestApi(
+            self, "ContractGuardAPI",
+            rest_api_name="ContractGuard API",
+            description="API for ContractGuard AI contract analysis",
+            deploy_options=apigw.StageOptions(
+                stage_name="prod",
+                throttling_rate_limit=100,
+                throttling_burst_limit=200,
+                metrics_enabled=True
             ),
-            storage_configuration=bedrock.CfnKnowledgeBase.StorageConfigurationProperty(
-                type="OPENSEARCH_SERVERLESS",
-                opensearch_serverless_configuration=bedrock.CfnKnowledgeBase.OpenSearchServerlessConfigurationProperty(
-                    collection_arn=f"arn:aws:aoss:{self.region}:{self.account}:collection/contractguard-kb",
-                    vector_index_name="contractguard-clauses",
-                    field_mapping=bedrock.CfnKnowledgeBase.OpenSearchServerlessFieldMappingProperty(
-                        vector_field="embedding",
-                        text_field="text",
-                        metadata_field="metadata"
+            default_cors_preflight_options=apigw.CorsOptions(
+                allow_origins=apigw.Cors.ALL_ORIGINS,
+                allow_methods=apigw.Cors.ALL_METHODS,
+                allow_headers=["Content-Type", "Authorization"]
+            )
+        )
+
+        # API Key for access control
+        self.api_key = apigw.ApiKey(
+            self, "ContractGuardAPIKey",
+            api_key_name="ContractGuard-APIKey"
+        )
+
+        # Usage plan
+        usage_plan = self.api.add_usage_plan(
+            "ContractGuardUsagePlan",
+            name="Standard",
+            throttle=apigw.ThrottleSettings(
+                rate_limit=100,
+                burst_limit=200
+            ),
+            quota=apigw.QuotaSettings(
+                limit=10000,
+                period=apigw.Period.MONTH
+            )
+        )
+
+        usage_plan.add_api_key(self.api_key)
+        usage_plan.add_api_stage(
+            stage=self.api.deployment_stage
+        )
+
+        # ==================== API Resources ====================
+
+        # Health check endpoint
+        health = self.api.root.add_resource("health")
+        health.add_method(
+            "GET",
+            apigw.MockIntegration(
+                integration_responses=[
+                    apigw.IntegrationResponse(
+                        status_code="200",
+                        response_templates={
+                            "application/json": '{"status": "healthy", "service": "ContractGuard API"}'
+                        }
                     )
-                )
-            )
+                ],
+                passthrough_behavior=apigw.PassthroughBehavior.NEVER,
+                request_templates={
+                    "application/json": '{"statusCode": 200}'
+                }
+            ),
+            method_responses=[
+                apigw.MethodResponse(status_code="200")
+            ]
         )
-        
-        # Data source
-        self.kb_data_source = bedrock.CfnDataSource(
-            self, "KBDataSource",
-            name="ContractGuard-Clauses",
-            knowledge_base_id=self.knowledge_base.attr_knowledge_base_id,
-            data_source_configuration=bedrock.CfnDataSource.DataSourceConfigurationProperty(
-                type="S3",
-                s3_configuration=bedrock.CfnDataSource.S3DataSourceConfigurationProperty(
-                    bucket_arn=kb_bucket.bucket_arn,
-                    inclusion_prefixes=["clauses/"]
-                )
-            )
+
+        # Contracts resource
+        contracts = self.api.root.add_resource("contracts")
+
+        # POST /contracts/upload
+        upload = contracts.add_resource("upload")
+        upload.add_method(
+            "POST",
+            apigw.LambdaIntegration(lambda_functions['contract_parser']),
+            api_key_required=True
         )
-        
-        # ==================== Bedrock Agent ====================
-        
-        # Note: Using CfnAgent (L1) as L2 constructs not yet available
-        
-        self.agent = bedrock.CfnAgent(
-            self, "ContractGuardAgent",
-            agent_name="ContractGuard",
-            agent_resource_role_arn=agent_role.role_arn,
-            foundation_model="anthropic.claude-3-5-sonnet-20241022-v2:0",
-            instruction=self._get_agent_instruction(),
-            idle_session_ttl_in_seconds=3600,
-            description="Autonomous AI agent for contract review and negotiation"
+
+        # GET /contracts/{contractId}
+        contract = contracts.add_resource("{contractId}")
+        contract.add_method(
+            "GET",
+            apigw.LambdaIntegration(lambda_functions['contract_parser']),
+            api_key_required=True
         )
-        
-        # Agent alias
-        self.agent_alias = bedrock.CfnAgentAlias(
-            self, "AgentAlias",
-            agent_id=self.agent.attr_agent_id,
-            agent_alias_name="production",
-            description="Production alias for ContractGuard agent"
+
+        # POST /contracts/{contractId}/analyze
+        analyze = contract.add_resource("analyze")
+        analyze.add_method(
+            "POST",
+            apigw.LambdaIntegration(lambda_functions['risk_analyzer']),
+            api_key_required=True
         )
-        
+
+        # POST /contracts/{contractId}/recommend
+        recommend = contract.add_resource("recommend")
+        recommend.add_method(
+            "POST",
+            apigw.LambdaIntegration(lambda_functions['clause_recommender']),
+            api_key_required=True
+        )
+
+        # POST /contracts/{contractId}/negotiate
+        negotiate = contract.add_resource("negotiate")
+        negotiate.add_method(
+            "POST",
+            apigw.LambdaIntegration(lambda_functions['negotiation_strategist']),
+            api_key_required=True
+        )
+
+        # POST /contracts/{contractId}/redline
+        redline = contract.add_resource("redline")
+        redline.add_method(
+            "POST",
+            apigw.LambdaIntegration(lambda_functions['redline_creator']),
+            api_key_required=True
+        )
+
+        # POST /contracts/{contractId}/email
+        email = contract.add_resource("email")
+        email.add_method(
+            "POST",
+            apigw.LambdaIntegration(lambda_functions['email_generator']),
+            api_key_required=True
+        )
+
         # ==================== Outputs ====================
-        
-        self.agent_id = self.agent.attr_agent_id
-        self.kb_id = self.knowledge_base.attr_knowledge_base_id
-        
-        CfnOutput(self, "AgentId", value=self.agent_id)
-        CfnOutput(self, "AgentAliasId", value=self.agent_alias.attr_agent_alias_id)
-        CfnOutput(self, "KnowledgeBaseId", value=self.kb_id)
-    
-    def _get_agent_instruction(self) -> str:
-        """Get agent instruction from prompts module"""
-        # Import here to avoid circular dependency
-        from src.agent.agent_config import get_agent_instruction
-        return get_agent_instruction()
+
+        CfnOutput(
+            self, "APIEndpoint",
+            value=self.api.url,
+            description="API Gateway endpoint URL"
+        )
+
+        CfnOutput(
+            self, "APIKeyId",
+            value=self.api_key.key_id,
+            description="API Key ID"
+        )

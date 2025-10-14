@@ -5,6 +5,7 @@ Storage Stack: S3 buckets and DynamoDB tables
 from aws_cdk import (
     Stack,
     RemovalPolicy,
+    Duration,
     aws_s3 as s3,
     aws_dynamodb as dynamodb,
     CfnOutput
@@ -33,7 +34,7 @@ class StorageStack(Stack):
                     transitions=[
                         s3.Transition(
                             storage_class=s3.StorageClass.GLACIER,
-                            transition_after_days=90
+                            transition_after=Duration.days(90)
                         )
                     ]
                 )

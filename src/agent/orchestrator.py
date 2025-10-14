@@ -21,10 +21,11 @@ class ContractGuardAgent:
     """
     
     def __init__(self):
-        self.bedrock_agent = boto3.client('bedrock-agent-runtime')
-        self.bedrock_runtime = boto3.client('bedrock-runtime')
+        self.region = os.getenv('AWS_REGION', 'us-east-2')
+        self.bedrock_agent = boto3.client('bedrock-agent-runtime', region_name=self.region)
+        self.bedrock_runtime = boto3.client('bedrock-runtime', region_name=self.region)
         self.db_helper = DynamoDBHelper()
-        
+
         self.agent_id = os.getenv('BEDROCK_AGENT_ID')
         self.agent_alias_id = os.getenv('BEDROCK_AGENT_ALIAS_ID')
         

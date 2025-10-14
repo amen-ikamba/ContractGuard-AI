@@ -2,6 +2,9 @@
 FastAPI handlers for ContractGuard AI API
 """
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

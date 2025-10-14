@@ -13,9 +13,10 @@ logger = get_logger(__name__)
 
 class S3Helper:
     """Helper class for S3 operations"""
-    
+
     def __init__(self, bucket_name: Optional[str] = None):
-        self.s3_client = boto3.client('s3')
+        self.region = os.getenv('AWS_REGION', 'us-east-2')
+        self.s3_client = boto3.client('s3', region_name=self.region)
         self.bucket_name = bucket_name or os.getenv('CONTRACTS_BUCKET')
         
         if not self.bucket_name:

@@ -4,16 +4,20 @@ AWS CDK app for ContractGuard AI infrastructure
 """
 
 import os
+from dotenv import load_dotenv
 from aws_cdk import App, Environment
 from stacks.storage_stack import StorageStack
 from stacks.compute_stack import ComputeStack
-from stacks.ai_stack import AIStack
+from stacks.ai_stack_simple import AIStack
 from stacks.api_stack import APIStack
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 # Get environment
 env = Environment(
-    account=os.getenv('CDK_DEFAULT_ACCOUNT'),
-    region=os.getenv('AWS_REGION', 'us-east-1')
+    account=os.getenv('AWS_ACCOUNT_ID') or os.getenv('CDK_DEFAULT_ACCOUNT'),
+    region=os.getenv('AWS_REGION', 'us-east-2')
 )
 
 app = App()
